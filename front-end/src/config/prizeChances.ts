@@ -35,17 +35,31 @@ function distribute(weights: number[], target: number): number[] {
 /**
  * Distribuição padrão, vinda do `weight` de cada prêmio.
  *
- * Os pesos dos 7 brindes já somam 100 e o prêmio máximo entra com 2,
- * dando 102 no total — a normalização espreme tudo proporcionalmente
- * para caber em 100, tirando os 2 pontos das maiores fatias.
+ * O prêmio máximo é o único com fatia exata: o `weight` dele já é a
+ * porcentagem final (10%). Os 7 brindes dividem os 90 restantes
+ * mantendo a proporção entre si — como os pesos deles somam 100,
+ * cada um acaba valendo 90% do que foi configurado.
  */
 export function defaultPrizeChances(): PrizeChances {
-    const values = distribute(
-        PRIZES.map((p) => p.weight),
-        100,
+    const jackpot = PRIZES.find((p) => p.jackpot);
+    const fatiaJackpot = jackpot
+        ? Math.min(100, Math.max(0, jackpot.weight))
+        : 0;
+
+    const outros = PRIZES.filter((p) => !p.jackpot);
+    const valores = distribute(
+        outros.map((p) => p.weight),
+        100 - fatiaJackpot,
     );
 
-    return Object.fromEntries(PRIZE_IDS.map((id, i) => [id, values[i]]));
+    const chances: PrizeChances = {};
+
+    if (jackpot) chances[jackpot.id] = fatiaJackpot;
+    outros.forEach((p, i) => {
+        chances[p.id] = valores[i];
+    });
+
+    return chances;
 }
 
 export function normalizePrizeChances(raw: unknown): PrizeChances {
@@ -91,13 +105,56 @@ export function setPrizeChance(
 
 
 
-export function pickPrizeIndex(chances: PrizeChances): number {
-    let point = Math.random() * 100;
+/**
+ * Soma das fatias dos prêmios que não são o prêmio máximo — ou seja,
+ * o que sobra para quem é cliente. Se der zero, a configuração deixa
+ * clientes sem nenhum prêmio definido.
+ */
+export function somaSemJackpot(chances: PrizeChances): number {
+    return PRIZES.filter((p) => !p.jackpot).reduce(
+        (soma, p) => soma + (chances[p.id] ?? 0),
+        0,
+    );
+}
 
-    for (let i = 0; i < PRIZES.length; i++) {
-        point -= chances[PRIZES[i].id] ?? 0;
-        if (point < 0) return i;
+/**
+ * Sorteia o índice do prêmio da combinação vencedora, ponderado pelas
+ * chances configuradas no painel.
+ *
+ * Com `permitirJackpot: false` o prêmio máximo sai da roleta e a fatia
+ * dele é redistribuída sozinha: o total passa a ser a soma dos prêmios
+ * elegíveis em vez de 100 fixo, então os 90% restantes viram os novos
+ * 100% e cada prêmio cresce proporcionalmente.
+ */
+export function pickPrizeIndex(
+    chances: PrizeChances,
+    { permitirJackpot = true }: { permitirJackpot?: boolean } = {},
+): number {
+    const elegiveis = PRIZES.map((prize, index) => ({ prize, index })).filter(
+        ({ prize }) => permitirJackpot || !prize.jackpot,
+    );
+
+    const total = elegiveis.reduce(
+        (soma, { prize }) => soma + (chances[prize.id] ?? 0),
+        0,
+    );
+
+    // Todas as fatias elegíveis zeradas — acontece, por exemplo, com o
+    // prêmio máximo em 100% e um jogador que é cliente. Não há roleta
+    // ponderada possível, então sorteia igualmente entre os elegíveis:
+    // devolver sempre o primeiro faria o resultado depender da ordem da
+    // lista de prêmios, o que é arbitrário.
+    if (total <= 0) {
+        return elegiveis[Math.floor(Math.random() * elegiveis.length)].index;
     }
 
-    return PRIZES.length - 1;
+    let point = Math.random() * total;
+
+    for (const { prize, index } of elegiveis) {
+        point -= chances[prize.id] ?? 0;
+        if (point < 0) return index;
+    }
+
+    // só chega aqui por resíduo de ponto flutuante
+    return elegiveis[elegiveis.length - 1].index;
 }

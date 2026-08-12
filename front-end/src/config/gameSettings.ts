@@ -3,20 +3,25 @@ import {
     normalizePrizeChances,
     type PrizeChances,
 } from "./prizeChances";
+import {
+    DEFAULT_FORM_FIELDS,
+    normalizeFormFields,
+    type FormFieldsConfig,
+} from "./formFields";
 
 export type GameSettings = {
-    /** quantos giros cada pessoa tem */
     maxAttempts: number;
-    /** chance de acertar 3 figuras iguais, de 0 a 1 */
     winChance: number;
-    /** fatia de cada prêmio DENTRO das vitórias — soma sempre 100 */
     prizeChances: PrizeChances;
+    /** quais campos aparecem no formulário */
+    formFields: FormFieldsConfig;
 };
 
 export const DEFAULT_SETTINGS: GameSettings = {
     maxAttempts: 1,
     winChance: 0.45,
     prizeChances: defaultPrizeChances(),
+    formFields: DEFAULT_FORM_FIELDS,
 };
 
 const STORAGE_KEY = "slot_game_settings";
@@ -43,6 +48,7 @@ export function loadGameSettings(): GameSettings {
                 : DEFAULT_SETTINGS.winChance,
             // a lista de prêmios pode ter mudado desde o último save
             prizeChances: normalizePrizeChances(parsed.prizeChances),
+            formFields: normalizeFormFields(parsed.formFields),
         };
     } catch {
         return DEFAULT_SETTINGS;
@@ -54,6 +60,7 @@ export function saveGameSettings(settings: GameSettings): GameSettings {
         maxAttempts: clamp(Math.round(settings.maxAttempts), 1, 10),
         winChance: clamp(settings.winChance, 0, 1),
         prizeChances: normalizePrizeChances(settings.prizeChances),
+        formFields: normalizeFormFields(settings.formFields),
     };
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));

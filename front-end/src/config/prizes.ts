@@ -1,10 +1,10 @@
 import Icon1Branco from "../assets/icon1-branco-sem-fundo.png";
-import Icon2Branco from "../assets/icon2-branco-sem-fundo.png";
 import Icon3Branco from "../assets/icon3-branco-sem-fundo.png";
 import Icon4Colorido from "../assets/icon4-colorido-sem-fundo.png";
-import Icon5Vermelho from "../assets/icon5-vermelho-sem-fundo.png";
 import Icon6Branco from "../assets/icon6-branco-sem-fundo.png";
 import Icon7Branco from "../assets/icon7-branco-sem-fundo.png";
+import Selo32Anos from "../assets/selo-32-anos.png";
+import SibraxLogoLimpa from "../assets/sibrax-logo-limpa.png";
 
 export type Prize = {
     id: string;
@@ -12,11 +12,6 @@ export type Prize = {
     article: "um" | "uma";
     bg: string;
     image?: string;
-    /**
-     * Peso da distribuição padrão, usado pelo botão "Restaurar padrão"
-     * do painel admin. São proporções, não porcentagens: o total é
-     * normalizado para 100 na hora de aplicar.
-     */
     weight: number;
 
     jackpot?: boolean;
@@ -27,7 +22,7 @@ export const PRIZES: Prize[] = [
         id: "mouse-pad",
         label: "Mouse pad",
         article: "um",
-        bg: "#2e4b82",
+        bg: "#2465b5",
         image: Icon1Branco,
         weight: 20,
     },
@@ -35,8 +30,8 @@ export const PRIZES: Prize[] = [
         id: "kit-queijo",
         label: "Kit Queijo",
         article: "um",
-        bg: "#f05f0c",
-        image: Icon2Branco,
+        bg: "#2e4b82",
+        image: Selo32Anos,
         weight: 5,
     },
     {
@@ -51,7 +46,7 @@ export const PRIZES: Prize[] = [
         id: "chaveiro-metal",
         label: "Chaveiro em Metal",
         article: "um",
-        bg: "#2465b5",
+        bg: "#f05f0c",
         image: Icon3Branco,
         weight: 25,
     },
@@ -67,7 +62,7 @@ export const PRIZES: Prize[] = [
         id: "copo-termico",
         label: "Copo Térmico",
         article: "um",
-        bg: "#02bae8",
+        bg: "#012757",
         image: Icon7Branco,
         weight: 10,
     },
@@ -75,8 +70,8 @@ export const PRIZES: Prize[] = [
         id: "garrafa-termica",
         label: "Garrafa Térmica",
         article: "uma",
-        bg: "#012757",
-        image: Icon5Vermelho,
+        bg: "#02bae8",
+        image: SibraxLogoLimpa,
         weight: 5,
     },
     {
@@ -85,7 +80,9 @@ export const PRIZES: Prize[] = [
         article: "um",
         bg: "#f7c948",
         jackpot: true,
-        weight: 2,
+        // aqui o weight é a fatia final em %, não uma proporção: o
+        // prêmio máximo fica com 10% e os outros dividem os 90 restantes
+        weight: 10,
     },
 ];
 

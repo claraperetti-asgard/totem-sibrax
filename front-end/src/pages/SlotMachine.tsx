@@ -1,22 +1,16 @@
 import { useRef, useState } from "react";
-import { ArrowLeft, Crown, X } from "lucide-react";
+import { ArrowLeft, Crown } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import confetti from "canvas-confetti";
 import BgSibrax from "../assets/bg-sibrax.png";
 import LogoSibrax from "../assets/logo-sibrax-branco.png";
 import LogoConviver from "../assets/logo-conviver.png";
 import Selo32Anos from "../assets/selo-32-anos.png";
-import AcessoAdmin from "../components/AcessoAdmin";
 import PrizeCard from "../components/PrizeCard";
 import { JACKPOT_INDEX, PRIZES } from "../config/prizes";
 import { pickPrizeIndex } from "../config/prizeChances";
-import {
-    ADMIN_PASSWORD,
-    ADMIN_USER,
-    loadGameSettings,
-    saveGameSettings,
-    type GameSettings,
-} from "../config/gameSettings";
+import { loadGameSettings, type GameSettings } from "../config/gameSettings";
+import { loadParticipante } from "../config/participante";
 
 const CELL = 240;
 const REEL_W = 260;
@@ -77,15 +71,15 @@ const centerPos = (t: number) => (t - 1 + L) % L;
 const SPIN_MS = [2200, 2800, 3400];
 
 export default function SlotMachine() {
-    const [settings, setSettings] = useState<GameSettings>(() => loadGameSettings());
+    // as configurações são editadas no painel da Home; aqui só são lidas
+    const [settings] = useState<GameSettings>(() => loadGameSettings());
     const MAX_ATTEMPTS = settings.maxAttempts;
     const WIN_CHANCE = settings.winChance;
 
-    const [adminOpen, setAdminOpen] = useState(false);
-    const [loginOpen, setLoginOpen] = useState(false);
-    const [loginUser, setLoginUser] = useState("");
-    const [loginPassword, setLoginPassword] = useState("");
-    const [loginError, setLoginError] = useState("");
+    // regra fixa: o prêmio máximo é exclusivo de quem NÃO é cliente.
+    // Sem informação (entrou direto no /slotmachine), libera.
+    const [participante] = useState(() => loadParticipante());
+    const permitirJackpot = participante?.eCliente !== 1;
 
     const [positions, setPositions] = useState([
         centerPos(0),
@@ -106,7 +100,7 @@ export default function SlotMachine() {
     const drawResult = () => {
         if (Math.random() < WIN_CHANCE) {
             // qual prêmio cai é decidido pelas fatias configuradas no admin
-            const s = pickPrizeIndex(settings.prizeChances);
+            const s = pickPrizeIndex(settings.prizeChances, { permitirJackpot });
             return [s, s, s];
         }
 
@@ -194,40 +188,12 @@ export default function SlotMachine() {
         }, SPIN_MS[SPIN_MS.length - 1] + 150);
     };
 
-    const openLogin = () => {
-        setLoginUser("");
-        setLoginPassword("");
-        setLoginError("");
-        setLoginOpen(true);
-    };
-
-    const handleLogin = () => {
-        if (
-            loginUser.trim().toLowerCase() === ADMIN_USER &&
-            loginPassword === ADMIN_PASSWORD
-        ) {
-            setLoginOpen(false);
-            setAdminOpen(true);
-            return;
-        }
-
-        setLoginError("Usuário ou senha inválidos");
-    };
-
     // no prêmio máximo os LEDs viram dourados e piscam bem mais rápido
     const ledClass = jackpot
         ? "bg-[#ffd700] shadow-[0_0_28px_10px_rgba(255,215,0,0.85)]"
         : "bg-[#f05f0c] shadow-[0_0_20px_5px_rgba(240,95,12,0.7)]";
     const ledSpeed = jackpot ? "0.32s" : "1.8s";
     const ledDelay = jackpot ? "0.16s" : "0.9s";
-
-    const handleSaveSettings = (next: GameSettings) => {
-        setSettings(saveGameSettings(next));
-
-        setAttempts(0);
-        setWon(false);
-        setJackpot(false);
-    };
 
     return (
         <div className="relative min-h-screen w-full overflow-x-hidden text-white">
@@ -469,19 +435,12 @@ export default function SlotMachine() {
                   
                 </div>
 
-                <div className="relative mt-auto flex w-full max-w-5xl flex-col items-center px-8">
+                <div className="mt-auto flex w-full max-w-5xl flex-col items-center px-8">
                     <img
                         src={LogoConviver}
                         alt="Conviver - App de Condomínios"
-                        className="w-110 object-contain drop-shadow-[0_6px_20px_rgba(0,0,0,0.55)]"
+                        className="w-130 object-contain drop-shadow-[0_6px_20px_rgba(0,0,0,0.55)]"
                     />
-
-                    <button
-                        onClick={openLogin}
-                        className="absolute right-8 bottom-0 rounded-full border border-white/15 bg-white/10 px-6 py-2 text-sm font-bold tracking-wide text-white/70 backdrop-blur-sm"
-                    >
-                        Acesso Admin
-                    </button>
                 </div>
             </div>
 
@@ -535,64 +494,6 @@ export default function SlotMachine() {
                 </div>
             )}
 
-            {loginOpen && (
-                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/75 px-8">
-                    <div className="relative w-full max-w-2xl space-y-8 rounded-3xl border border-[#f05f0c]/40 bg-gradient-to-b from-[#2e4b82] to-[#16264a] p-10 shadow-[0_30px_70px_rgba(0,0,0,0.6)]">
-                        <button
-                            onClick={() => setLoginOpen(false)}
-                            className="absolute right-6 top-6 rounded-full border border-white/20 bg-white/10 p-2"
-                        >
-                            <X color="#ffffff" size={28} />
-                        </button>
-
-                        <h2 className="text-4xl font-black italic uppercase">
-                            Acesso <span className="text-[#f05f0c]">Admin</span>
-                        </h2>
-
-                        <div className="space-y-3">
-                            <label className="block text-2xl font-bold">Usuário</label>
-                            <input
-                                value={loginUser}
-                                onChange={(e) => setLoginUser(e.target.value)}
-                                className="w-full rounded-2xl bg-white px-6 py-4 text-3xl font-bold text-[#2e4b82] outline-none focus:ring-4 focus:ring-[#f05f0c]/50"
-                            />
-                        </div>
-
-                        <div className="space-y-3">
-                            <label className="block text-2xl font-bold">Senha</label>
-                            <input
-                                type="password"
-                                value={loginPassword}
-                                onChange={(e) => setLoginPassword(e.target.value)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") handleLogin();
-                                }}
-                                className="w-full rounded-2xl bg-white px-6 py-4 text-3xl font-bold text-[#2e4b82] outline-none focus:ring-4 focus:ring-[#f05f0c]/50"
-                            />
-                        </div>
-
-                        {loginError && (
-                            <p className="text-xl font-bold text-[#ff9a6b]">{loginError}</p>
-                        )}
-
-                        <button
-                            onClick={handleLogin}
-                            className="w-full rounded-full bg-gradient-to-b from-[#ff7a29] to-[#f05f0c] px-12 py-4 text-3xl font-black uppercase text-white shadow-[0_10px_26px_rgba(240,95,12,0.4)] active:scale-95"
-                        >
-                            Entrar
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* ---------- PAINEL ADMIN ---------- */}
-            {adminOpen && (
-                <AcessoAdmin
-                    settings={settings}
-                    onSave={handleSaveSettings}
-                    onClose={() => setAdminOpen(false)}
-                />
-            )}
         </div>
     );
 }

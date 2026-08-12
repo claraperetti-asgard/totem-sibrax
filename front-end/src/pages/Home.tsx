@@ -1,11 +1,27 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Play } from "lucide-react";
+import { Play, Settings } from "lucide-react";
 import BgSibrax from "../assets/bg-sibrax.png";
 import LogoSibrax from "../assets/logo-sibrax-branco.png";
 import LogoConviver from "../assets/logo-conviver.png";
 import Selo32Anos from "../assets/selo-32-anos.png";
+import AcessoAdmin from "../components/AcessoAdmin";
+import LoginAdmin from "../components/LoginAdmin";
+import {
+    loadGameSettings,
+    saveGameSettings,
+    type GameSettings,
+} from "../config/gameSettings";
+
 
 export default function Home() {
+    const [settings, setSettings] = useState<GameSettings>(() =>
+        loadGameSettings(),
+    );
+
+    const [adminOpen, setAdminOpen] = useState(false);
+    const [loginOpen, setLoginOpen] = useState(false);
+
     return (
         <div className="relative min-h-screen w-full overflow-x-hidden text-white">
             <img
@@ -47,7 +63,7 @@ export default function Home() {
                     </p>
 
                     <NavLink
-                        to="/slotmachine"
+                        to="/forms"
                         className="group relative flex items-center justify-center"
                     >
                         {/* halo pulsando atrás do botão */}
@@ -74,10 +90,46 @@ export default function Home() {
                     <img
                         src={LogoConviver}
                         alt="Conviver - App de Condomínios"
-                        className="w-110 object-contain drop-shadow-[0_6px_20px_rgba(0,0,0,0.55)]"
+                        className="w-135 object-contain drop-shadow-[0_6px_20px_rgba(0,0,0,0.55)]"
                     />
                 </div>
             </div>
+
+            <button
+                onClick={() => setLoginOpen(true)}
+                aria-label="Configurações"
+                className="fixed bottom-8 right-8 z-30 rounded-full border  bg-[#f05f0c] p-4 text-white backdrop-blur-sm transition-colors active:bg-[#f05f0c]/30"
+            >
+                <Settings size={34} />
+            </button>
+
+            <NavLink
+                to="/sorteio"
+                aria-label="Sorteio"
+                className="fixed bottom-8 left-8 z-30 rounded-full border text-2xl bg-[#f05f0c] py-4 px-6 text-white backdrop-blur-sm transition-colors active:bg-[#f05f0c]/30"
+            >
+                Sorteio
+            </NavLink>
+
+            {/* ---------- LOGIN ---------- */}
+            {loginOpen && (
+                <LoginAdmin
+                    onSuccess={() => {
+                        setLoginOpen(false);
+                        setAdminOpen(true);
+                    }}
+                    onClose={() => setLoginOpen(false)}
+                />
+            )}
+
+            {/* ---------- PAINEL ADMIN ---------- */}
+            {adminOpen && (
+                <AcessoAdmin
+                    settings={settings}
+                    onSave={(next) => setSettings(saveGameSettings(next))}
+                    onClose={() => setAdminOpen(false)}
+                />
+            )}
         </div>
     );
 }

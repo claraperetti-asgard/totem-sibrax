@@ -7,6 +7,7 @@ import LogoSibrax from "../assets/logo-sibrax-branco.png";
 import LogoConviver from "../assets/logo-conviver.png";
 import Selo32Anos from "../assets/selo-32-anos.png";
 import { getPrize } from "../config/prizes";
+import { clearParticipante } from "../config/participante";
 
 const SIBRAX_CONFETTI = ["#f05f0c", "#2465b5", "#45b552", "#02bae8", "#ffffff"];
 const GOLD_CONFETTI = ["#ffd700", "#ffb300", "#fff3b0", "#f05f0c", "#ffffff"];
@@ -18,6 +19,11 @@ export default function EndScreen() {
     const prize = getPrize(state?.prizeId);
     const isWin = status === "win";
     const isJackpot = isWin && Boolean(prize?.jackpot);
+
+    // a partida acabou: o próximo participante não pode herdar este
+    useEffect(() => {
+        clearParticipante();
+    }, []);
 
     useEffect(() => {
         if (!isWin) return;
@@ -89,7 +95,7 @@ export default function EndScreen() {
                     <img
                         src={LogoSibrax}
                         alt="Sibrax Software"
-                        className="w-80 object-contain drop-shadow-[0_6px_20px_rgba(0,0,0,0.55)]"
+                        className="w-90 object-contain drop-shadow-[0_6px_20px_rgba(0,0,0,0.55)]"
                     />
                 </header>
 
@@ -113,7 +119,7 @@ export default function EndScreen() {
                     <img
                         src={LogoConviver}
                         alt="Conviver - App de Condomínios"
-                        className="w-110 object-contain drop-shadow-[0_6px_20px_rgba(0,0,0,0.55)]"
+                        className="w-135 object-contain drop-shadow-[0_6px_20px_rgba(0,0,0,0.55)]"
                     />
                 </div>
             </div>

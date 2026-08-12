@@ -52,6 +52,63 @@
   background: transparent;
 }
 
+/* ============================================================
+   TECLADO VIRTUAL DO FORMULÁRIO
+   sobrescreve o tema claro padrão do react-simple-keyboard
+   ============================================================ */
+/* o CSS do pacote é importado dentro do componente, então entra depois
+   deste arquivo no bundle. Os seletores abaixo levam a classe do tema
+   junto (.slot-keyboard.hg-theme-default) só para ganhar em
+   especificidade — sem isso o fundo branco padrão volta e as letras
+   brancas somem. */
+.slot-keyboard.hg-theme-default {
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+}
+
+.slot-keyboard.hg-theme-default .hg-row + .hg-row {
+  margin-top: 10px;
+}
+
+.slot-keyboard.hg-theme-default .hg-button {
+  height: 68px;
+  margin: 0 5px 0 0;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 4px solid rgba(0, 0, 0, 0.45);
+  background: #2e4b82;
+  color: #ffffff;
+  font-size: 26px;
+  font-weight: 700;
+  box-shadow: none;
+  transition:
+    background 0.12s,
+    transform 0.08s;
+}
+
+.slot-keyboard.hg-theme-default .hg-row .hg-button:not(:last-child) {
+  margin-right: 5px;
+}
+
+.slot-keyboard.hg-theme-default .hg-button:last-child {
+  margin-right: 0;
+}
+
+.slot-keyboard.hg-theme-default .hg-button:active,
+.slot-keyboard.hg-theme-default .hg-button.hg-activeButton {
+  background: #f05f0c;
+  border-color: #f05f0c;
+  border-bottom-color: #a63f06;
+  transform: translateY(2px);
+}
+
+/* teclas de ação ficam com peso visual menor que as letras */
+.slot-keyboard.hg-theme-default .hg-button.hg-functionBtn {
+  background: #16264a;
+  font-size: 20px;
+}
+
 /* luzes laterais/superiores do gabinete */
 @keyframes slot-glow {
   0%,
