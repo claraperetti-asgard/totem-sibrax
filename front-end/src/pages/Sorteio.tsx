@@ -22,8 +22,17 @@ type Resposta = {
 
 const SIBRAX_CONFETTI = ["#f05f0c", "#2465b5", "#45b552", "#02bae8", "#ffffff"];
 
-/** quanto tempo a roleta de nomes roda antes de revelar o vencedor */
-const SUSPENSE_MS = 4200;
+const SUSPENSE_MS = 9000;
+
+
+const ARRANCADA_INICIO = 0.78;
+const ARRANCADA_FIM = 0.87;
+
+const faseTexto = (progresso: number) => {
+    if (progresso < 0.45) return "Sorteando...";
+    if (progresso < ARRANCADA_FIM) return "Quase lá...";
+    return "E o ganhador é...";
+};
 
 /** célula vazia vira travessão em vez de sumir */
 const ouTraco = (valor: string | null | undefined) =>
@@ -79,6 +88,8 @@ export default function Sorteio() {
     const [erroSorteio, setErroSorteio] = useState("");
     // nome que fica trocando durante o suspense
     const [nomeRoleta, setNomeRoleta] = useState("");
+    // 0 a 1 — controla o texto e a intensidade visual do card
+    const [progresso, setProgresso] = useState(0);
     const roletaRef = useRef<number | null>(null);
 
     const [baixando, setBaixando] = useState(false);
@@ -119,6 +130,7 @@ export default function Sorteio() {
 
     const revelarVencedor = (ganhador: Resposta) => {
         setNomeRoleta("");
+        setProgresso(0);
         setVencedor(ganhador);
         setSorteando(false);
 
@@ -147,9 +159,10 @@ export default function Sorteio() {
     };
 
     /**
-     * Roleta de nomes que vai desacelerando: começa trocando a cada 50ms
-     * e vai até ~500ms, como uma roda perdendo força. No fim revela quem
-     * a API já tinha sorteado.
+     * Roleta de nomes com três momentos: gira num borrão por vários
+     * segundos, começa a perder força, dá uma arrancada quando parecia
+     * que ia parar, e só então desacelera até revelar quem a API já
+     * tinha sorteado.
      */
     const rodarSuspense = (ganhador: Resposta, inicio: number) => {
         const decorrido = Date.now() - inicio;
@@ -166,9 +179,17 @@ export default function Sorteio() {
                 : "...",
         );
 
-        // curva quadrática: rápido no começo, arrastado no fim
         const progresso = decorrido / SUSPENSE_MS;
-        const delay = 50 + progresso * progresso * 470;
+        setProgresso(progresso);
+
+        // expoente alto segura a velocidade máxima por mais tempo e
+        // concentra toda a desaceleração no fim
+        let delay = 45 + Math.pow(progresso, 3.4) * 950;
+
+        // a arrancada: volta a girar rápido quando já parecia acabar
+        if (progresso >= ARRANCADA_INICIO && progresso < ARRANCADA_FIM) {
+            delay = 55;
+        }
 
         roletaRef.current = window.setTimeout(
             () => rodarSuspense(ganhador, inicio),
@@ -183,6 +204,7 @@ export default function Sorteio() {
         setErroSorteio("");
         setVencedor(null);
         setNomeRoleta("");
+        setProgresso(0);
 
         try {
             const response = await fetch(apiUrl("/sorteio"));
@@ -321,23 +343,32 @@ export default function Sorteio() {
                 {/* ---------- SUSPENSE ---------- */}
                 {sorteando && (
                     <div className="relative w-full max-w-4xl">
+                        {/* o halo aperta o ritmo conforme o sorteio avança */}
                         <div
                             className="absolute -inset-6 rounded-[3rem] bg-[#f05f0c]/20 blur-3xl"
-                            style={{ animation: "jackpot-glow 0.8s ease-in-out infinite" }}
+                            style={{
+                                animation: `jackpot-glow ${1.1 - progresso * 0.7}s ease-in-out infinite`,
+                            }}
                         />
 
-                        <div className="relative flex flex-col items-center gap-5 rounded-3xl border-4 border-[#f05f0c]/50 bg-gradient-to-b from-[#2e4b82] to-[#16264a] p-10 text-center shadow-[0_30px_70px_rgba(0,0,0,0.55)]">
+                        <div
+                            className="relative flex flex-col items-center gap-5 rounded-3xl border-4 bg-gradient-to-b from-[#2e4b82] to-[#16264a] p-10 text-center shadow-[0_30px_70px_rgba(0,0,0,0.55)] transition-colors duration-500"
+                            style={{
+                                // a borda vai acendendo até ficar laranja pleno
+                                borderColor: `rgba(240,95,12,${0.4 + progresso * 0.6})`,
+                            }}
+                        >
                             <Trophy
                                 size={70}
                                 color="#f05f0c"
                                 strokeWidth={2}
                                 style={{
-                                    animation: "jackpot-shake 0.55s ease-in-out infinite",
+                                    animation: `jackpot-shake ${0.75 - progresso * 0.35}s ease-in-out infinite`,
                                 }}
                             />
 
                             <h2 className="text-3xl font-black italic uppercase tracking-[0.3em] text-white/70">
-                                Sorteando...
+                                {faseTexto(progresso)}
                             </h2>
 
                             {/* nome trocando rápido e desacelerando */}
@@ -345,13 +376,21 @@ export default function Sorteio() {
                                 {nomeRoleta || "..."}
                             </p>
 
+                            {/* barra de progresso do suspense */}
+                            <div className="h-2 w-2/3 overflow-hidden rounded-full bg-white/10">
+                                <div
+                                    className="h-full rounded-full bg-[#45b552] shadow-[0_0_12px_2px_rgba(69,181,82,0.7)]"
+                                    style={{ width: `${progresso * 100}%` }}
+                                />
+                            </div>
+
                             <div className="flex gap-2">
                                 {[0, 1, 2].map((i) => (
                                     <span
                                         key={i}
                                         className="h-3 w-3 rounded-full bg-[#45b552]"
                                         style={{
-                                            animation: `slot-glow 0.9s ease-in-out ${i * 0.15}s infinite`,
+                                            animation: `slot-glow ${0.9 - progresso * 0.5}s ease-in-out ${i * 0.15}s infinite`,
                                         }}
                                     />
                                 ))}
@@ -404,10 +443,6 @@ export default function Sorteio() {
                                 <InfoVencedor
                                     rotulo="É cliente?"
                                     valor={formatCliente(vencedor.e_cliente)}
-                                />
-                                <InfoVencedor
-                                    rotulo="Cadastro"
-                                    valor={formatData(vencedor.criado_em)}
                                 />
                             </div>
                         </div>
