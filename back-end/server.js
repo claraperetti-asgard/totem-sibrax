@@ -27,6 +27,7 @@ app.post("/respostas", (req, res) => {
         cpf,
         telefone,
         razao_social,
+        sistema_atual,
         e_cliente,
     } = req.body;
 
@@ -57,9 +58,10 @@ app.post("/respostas", (req, res) => {
                 cpf,
                 telefone,
                 razao_social,
+                sistema_atual,
                 e_cliente
             )
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         `);
 
         const result = stmt.run(
@@ -68,6 +70,7 @@ app.post("/respostas", (req, res) => {
             cpfDigitos,
             ouNulo(telefone),
             ouNulo(razao_social),
+            ouNulo(sistema_atual),
             e_cliente === undefined || e_cliente === null
                 ? null
                 : Number(e_cliente)
@@ -156,6 +159,7 @@ app.get("/respostas/exportar", (req, res) => {
                     cpf,
                     telefone,
                     razao_social,
+                    sistema_atual,
                     e_cliente,
                     criado_em
                 FROM respostas
@@ -183,6 +187,7 @@ app.get("/respostas/exportar", (req, res) => {
                     : resposta.e_cliente === 0
                         ? "NÃO"
                         : "",
+            "Sistema que utiliza": resposta.sistema_atual,
             "Data de cadastro": resposta.criado_em,
         }));
 

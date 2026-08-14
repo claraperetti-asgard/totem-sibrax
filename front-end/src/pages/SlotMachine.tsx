@@ -71,13 +71,11 @@ const centerPos = (t: number) => (t - 1 + L) % L;
 const SPIN_MS = [2200, 2800, 3400];
 
 export default function SlotMachine() {
-    // as configurações são editadas no painel da Home; aqui só são lidas
-    const [settings] = useState<GameSettings>(() => loadGameSettings());
+     const [settings] = useState<GameSettings>(() => loadGameSettings());
     const MAX_ATTEMPTS = settings.maxAttempts;
     const WIN_CHANCE = settings.winChance;
 
-    // regra fixa: o prêmio máximo é exclusivo de quem NÃO é cliente.
-    // Sem informação (entrou direto no /slotmachine), libera.
+     
     const [participante] = useState(() => loadParticipante());
     const permitirJackpot = participante?.eCliente !== 1;
 
@@ -99,7 +97,7 @@ export default function SlotMachine() {
 
     const drawResult = () => {
         if (Math.random() < WIN_CHANCE) {
-            // qual prêmio cai é decidido pelas fatias configuradas no admin
+           
             const s = pickPrizeIndex(settings.prizeChances, { permitirJackpot });
             return [s, s, s];
         }

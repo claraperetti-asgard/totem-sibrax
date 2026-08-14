@@ -16,6 +16,7 @@ type Resposta = {
     cpf: string | null;
     telefone: string | null;
     razao_social: string | null;
+    sistema_atual: string | null;
     e_cliente: number | null;
     criado_em: string;
 };
@@ -504,7 +505,7 @@ export default function Sorteio() {
                         </p>
                     ) : (
                         <div className="overflow-x-auto">
-                            <table className="w-full min-w-[1100px] border-collapse text-left">
+                            <table className="w-full min-w-[1280px] border-collapse text-left">
                                 <thead>
                                     <tr className="bg-[#0c1933]/70 text-lg uppercase tracking-wide text-white/60">
                                         <Th>Nome</Th>
@@ -513,6 +514,7 @@ export default function Sorteio() {
                                         <Th>Telefone</Th>
                                         <Th>Razão Social</Th>
                                         <Th>É cliente?</Th>
+                                        <Th>Sistema que utiliza</Th>
                                         <Th>Data de cadastro</Th>
                                     </tr>
                                 </thead>
@@ -536,6 +538,7 @@ export default function Sorteio() {
                                                 <Td>{formatTelefone(r.telefone)}</Td>
                                                 <Td>{ouTraco(r.razao_social)}</Td>
                                                 <Td>{formatCliente(r.e_cliente)}</Td>
+                                                <Td>{ouTraco(r.sistema_atual)}</Td>
                                                 <Td>{formatData(r.criado_em)}</Td>
                                             </tr>
                                         );

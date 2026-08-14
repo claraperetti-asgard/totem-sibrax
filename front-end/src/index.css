@@ -1,5 +1,26 @@
 @import "tailwindcss";
 
+/* ============================================================
+   MODO TOTEM
+   sem zoom por pinça, sem arrastar a tela para os lados e sem o
+   efeito de "puxar e soltar" nas bordas. Só a rolagem vertical
+   continua, que as telas de admin e sorteio precisam.
+   ============================================================ */
+html,
+body {
+  touch-action: pan-y;
+  overscroll-behavior: none;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* os sliders do painel precisam do arrasto horizontal: `none` entrega
+   o toque direto ao controle em vez de o navegador tentar rolar */
+.slot-range {
+  touch-action: none;
+}
+
 @theme {
   --color-sibrax-blue: #2e4b82;
   --color-sibrax-orange: #f05f0c;
@@ -107,6 +128,27 @@
 .slot-keyboard.hg-theme-default .hg-button.hg-functionBtn {
   background: #16264a;
   font-size: 20px;
+}
+
+/* versão compacta, usada no modal de login */
+.slot-keyboard-mini.hg-theme-default .hg-row + .hg-row {
+  margin-top: 6px;
+}
+
+.slot-keyboard-mini.hg-theme-default .hg-button {
+  height: 56px;
+  margin: 0 6px 0 0;
+  border-radius: 12px;
+  border-bottom-width: 3px;
+  font-size: 22px;
+}
+
+.slot-keyboard-mini.hg-theme-default .hg-row .hg-button:not(:last-child) {
+  margin-right: 6px;
+}
+
+.slot-keyboard-mini.hg-theme-default .hg-button.hg-functionBtn {
+  font-size: 15px;
 }
 
 /* luzes laterais/superiores do gabinete */

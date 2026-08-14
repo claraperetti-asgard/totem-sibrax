@@ -4,7 +4,7 @@ import Icon4Colorido from "../assets/icon4-colorido-sem-fundo.png";
 import Icon6Branco from "../assets/icon6-branco-sem-fundo.png";
 import Icon7Branco from "../assets/icon7-branco-sem-fundo.png";
 import Selo32Anos from "../assets/selo-32-anos.png";
-import SibraxLogoLimpa from "../assets/sibrax-logo-limpa.png";
+import CardSibrax from "../assets/card-sibrax.jpeg";
 
 export type Prize = {
     id: string;
@@ -12,6 +12,7 @@ export type Prize = {
     article: "um" | "uma";
     bg: string;
     image?: string;
+    imageFill?: boolean;
     weight: number;
 
     jackpot?: boolean;
@@ -71,7 +72,8 @@ export const PRIZES: Prize[] = [
         label: "Garrafa Térmica",
         article: "uma",
         bg: "#02bae8",
-        image: SibraxLogoLimpa,
+        image: CardSibrax,
+        imageFill: true,
         weight: 5,
     },
     {
@@ -80,8 +82,6 @@ export const PRIZES: Prize[] = [
         article: "um",
         bg: "#f7c948",
         jackpot: true,
-        // aqui o weight é a fatia final em %, não uma proporção: o
-        // prêmio máximo fica com 10% e os outros dividem os 90 restantes
         weight: 10,
     },
 ];

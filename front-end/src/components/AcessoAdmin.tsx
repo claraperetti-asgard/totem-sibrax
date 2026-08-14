@@ -167,9 +167,9 @@ export default function AcessoAdmin({ settings, onSave, onClose }: Props) {
                                             {field.label}
                                         </span>
 
-                                        {locked && (
+                                        {field.hint && (
                                             <span className="flex items-center gap-1.5 text-sm font-semibold text-white/45">
-                                                <Lock size={16} />
+                                                {locked && <Lock size={16} />}
                                                 {field.hint}
                                             </span>
                                         )}

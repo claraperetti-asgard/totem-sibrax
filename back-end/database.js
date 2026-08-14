@@ -4,13 +4,7 @@ const db = new Database("./data/respostas.db");
 
 db.pragma("journal_mode = WAL");
 
-/**
- * Esquema atual.
- *
- * O CPF é o único campo obrigatório e é UNIQUE — é ele que garante
- * "um giro por pessoa". Todos os outros são opcionais, porque o admin
- * pode desligá-los no painel e aí eles chegam aqui como null.
- */
+
 const COLUNAS = `
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nome TEXT,
@@ -19,8 +13,19 @@ const COLUNAS = `
     telefone TEXT,
     razao_social TEXT,
     e_cliente INTEGER,
+    sistema_atual TEXT,
     criado_em DATETIME DEFAULT CURRENT_TIMESTAMP
 `;
+
+/**
+ * Colunas acrescentadas depois que o totem já estava rodando. São
+ * adicionadas com ALTER TABLE, que no SQLite não mexe nos dados
+ * existentes — mais seguro que recriar a tabela.
+ */
+const COLUNAS_OPCIONAIS = [
+    // qual sistema a pessoa usa hoje; só perguntado a quem não é cliente
+    { nome: "sistema_atual", tipo: "TEXT" },
+];
 
 const tabelaExiste = () =>
     Boolean(
@@ -31,10 +36,7 @@ const tabelaExiste = () =>
             .get()
     );
 
-/**
- * O esquema antigo tinha `nome NOT NULL` e nenhuma restrição no cpf.
- * O SQLite não permite alterar coluna, então a migração recria a tabela.
- */
+
 const precisaMigrar = () => {
     const colunas = db.prepare("PRAGMA table_info(respostas)").all();
 
@@ -54,8 +56,6 @@ const migrar = () => {
     const executar = db.transaction(() => {
         db.exec(`CREATE TABLE respostas_novo (${COLUNAS})`);
 
-        // linhas sem cpf não cabem no esquema novo; entre cpfs repetidos
-        // fica o cadastro mais antigo
         db.exec(`
             INSERT INTO respostas_novo
                 (id, nome, email, cpf, telefone, razao_social, e_cliente, criado_em)
@@ -88,11 +88,28 @@ const migrar = () => {
     console.log("Migração concluída.");
 };
 
+/** acrescenta colunas novas em bancos que já existiam */
+const garantirColunas = () => {
+    const existentes = db
+        .prepare("PRAGMA table_info(respostas)")
+        .all()
+        .map((c) => c.name);
+
+    for (const coluna of COLUNAS_OPCIONAIS) {
+        if (existentes.includes(coluna.nome)) continue;
+
+        db.exec(`ALTER TABLE respostas ADD COLUMN ${coluna.nome} ${coluna.tipo}`);
+        console.log(`Coluna '${coluna.nome}' adicionada à tabela 'respostas'.`);
+    }
+};
+
 if (!tabelaExiste()) {
     db.exec(`CREATE TABLE respostas (${COLUNAS})`);
 } else if (precisaMigrar()) {
     migrar();
 }
+
+garantirColunas();
 
 console.log("Banco SQLite conectado!");
 

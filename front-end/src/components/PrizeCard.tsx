@@ -6,20 +6,31 @@ export default function PrizeCard({ prize, size }: { prize: Prize; size: number 
     if (prize.jackpot) return <JackpotFace size={size} />;
 
     return (
+  
         <div
             className="relative h-full w-full overflow-hidden rounded-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.35),inset_0_0_0_1px_rgba(0,0,0,0.18)]"
             style={{ backgroundColor: prize.bg }}
         >
-            
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/25" />
-
-            <div className="relative flex h-full w-full items-center justify-center p-6">
+            {prize.imageFill ? (
+               
                 <img
                     src={prize.image}
                     alt={prize.label}
-                    className="max-h-full max-w-full object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.45)]"
+                    className="absolute inset-0 h-full w-full object-cover"
                 />
-            </div>
+            ) : null}
+
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-black/25" />
+
+            {!prize.imageFill && (
+                <div className="relative flex h-full w-full items-center justify-center p-6">
+                    <img
+                        src={prize.image}
+                        alt={prize.label}
+                        className="max-h-full max-w-full object-contain drop-shadow-[0_4px_10px_rgba(0,0,0,0.45)]"
+                    />
+                </div>
+            )}
         </div>
     );
 }

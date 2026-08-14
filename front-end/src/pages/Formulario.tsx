@@ -38,6 +38,8 @@ export default function Formulario() {
     const [cpf, setCpf] = useState("");
     const [company, setCompany] = useState("");
     const [isClient, setIsClient] = useState<boolean | null>(null);
+    // só perguntado a quem não é cliente
+    const [sistema, setSistema] = useState("");
     const [emailOptions, setEmailOptions] = useState(false);
     // o primeiro campo de texto ligado começa em foco
     const [inputName, setInputName] = useState<string>(
@@ -88,11 +90,17 @@ export default function Formulario() {
     const emailOk = !fields.email || (email !== "" && validateEmail(email));
     const cpfOk = cpf !== "" && validateCPF(cpf);
 
+    // a pergunta sobre o sistema pode ser desligada no painel e, mesmo
+    // ligada, só aparece para quem marca que não é cliente
+    const perguntarSistema =
+        fields.sistema_atual && fields.e_cliente && isClient === false;
+
     const isFormValid =
         (!fields.nome || name !== "") &&
         (!fields.telefone || phone !== "") &&
         (!fields.razao_social || company !== "") &&
         (!fields.e_cliente || isClient !== null) &&
+        (!perguntarSistema || sistema !== "") &&
         emailOk &&
         cpfOk;
 
@@ -103,10 +111,25 @@ export default function Formulario() {
         }
     };
 
+    /**
+     * Marcar "sim" esconde a pergunta do sistema. Se ela estava em foco,
+     * o teclado ficaria digitando num campo invisível — então o foco
+     * volta para o CPF.
+     */
+    const escolherCliente = (valor: boolean) => {
+        setIsClient(valor);
+
+        if (valor && inputName === "sistema_atual") {
+            handleFocus("cpf", cpf);
+        }
+    };
+
     const onKeyboardChange = (inputVal: string) => {
         if (inputName === "nome") setName(inputVal);
 
         if (inputName === "razao_social") setCompany(inputVal);
+
+        if (inputName === "sistema_atual") setSistema(inputVal);
 
         if (inputName === "email") {
             const sanitized = inputVal
@@ -187,6 +210,7 @@ export default function Formulario() {
                     cpf: cpf,
                     telefone: fields.telefone ? phone : null,
                     razao_social: fields.razao_social ? company : null,
+                    sistema_atual: perguntarSistema ? sistema : null,
                     e_cliente: fields.e_cliente ? (isClient ? 1 : 0) : null,
                 }),
             });
@@ -459,7 +483,7 @@ export default function Formulario() {
                                     <button
                                         key={option.label}
                                         type="button"
-                                        onClick={() => setIsClient(option.value)}
+                                        onClick={() => escolherCliente(option.value)}
                                         className="flex items-center gap-3"
                                     >
                                         <span
@@ -489,6 +513,24 @@ export default function Formulario() {
                             })}
                         </div>
                     </div>
+
+                    {/* ---------- SISTEMA ATUAL (só para não clientes) ---------- */}
+                    {perguntarSistema && (
+                        <div className="flex flex-col gap-2 rounded-2xl border border-[#f05f0c]/40 bg-[#0c1933]/60 p-6">
+                            <label className="text-2xl font-bold">
+                                Qual sistema você utiliza?
+                            </label>
+                            <input
+                                id="sistema_atual"
+                                type="text"
+                                readOnly
+                                value={sistema}
+                                onFocus={() => handleFocus("sistema_atual", sistema)}
+                                placeholder="Nome do sistema"
+                                className={`${fieldBase} ${fieldBorder(inputName === "sistema_atual", false)}`}
+                            />
+                        </div>
+                    )}
 
                     {submitError && (
                         <span className="text-center text-xl font-semibold text-red-400">
